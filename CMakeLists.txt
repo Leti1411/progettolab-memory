@@ -20,5 +20,9 @@ set(gtest_disable_pthreads ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 add_subdirectory(test)
 
-add_executable(PROGETTOLAB main.cpp)
+add_executable(PROGETTOLAB main.cpp
+        Attività.cpp
+        Attività.h
+        Registro.cpp
+        Registro.h)
 target_link_libraries(PROGETTOLAB ${CURSES_LIBRARIES})
