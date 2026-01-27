@@ -7,7 +7,6 @@ TEST(AttivitaTest, CostruttoreEGetters) {
     std::string inizio = "9:00";
     std::string fine = "12:00";
 
-
     Attivita a(descrizione, inizio, fine);
 
     EXPECT_EQ(a.get_descrizione(), descrizione);

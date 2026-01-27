@@ -12,7 +12,6 @@ class Registro{
   void add_attivita(Attivita* attivita, std::string orario_scelto);
   Attivita* get_attivita(std::string orario_scelto);
 
-
 };
 
 
