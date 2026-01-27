@@ -9,6 +9,7 @@ void Registro::add_attivita(Attivita *nuova_attivita, std::string orario_scelto)
 }
 Attivita* Registro::get_attivita(std::string orario_scelto) {
       return registro[orario_scelto];
+
 }
 
 
