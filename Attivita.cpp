@@ -21,7 +21,12 @@
     std::string Attivita::get_orariofine() const {
         return orariofine;
     }
-
+    bool Attivita::operator<(const Attivita &other) const {
+        return this->get_orarioinizio() < other.get_orarioinizio();
+}
+    bool Attivita::orarioValido() const {
+        return get_orarioinizio() < get_orariofine();
+    }
 
 
 

@@ -1,15 +1,19 @@
 #include "Registro.h"
 #include "Attivita.h"
+#include <vector>
+#include <algorithm>
 
-Registro::Registro() {}
 
-Attivita* attivita;
-void Registro::add_attivita(Attivita *nuova_attivita, std::string orario_scelto) {
-      registro[orario_scelto] = nuova_attivita;
-}
-Attivita* Registro::get_attivita(std::string orario_scelto) {
-      return registro[orario_scelto];
-}
+      Registro::Registro() {}
+      void Registro::add_attivita(Attivita &nuova_attivita, std::string data) {
+            if (!nuova_attivita.orarioValido()){ return;}
+            registro[data].push_back(nuova_attivita);
+            std::sort(registro[data].begin(), registro[data].end());
+      }
+      std::vector<Attivita> Registro::get_attivita(std::string data) {
+            return registro[data];
+      }
+
 
 
 

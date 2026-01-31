@@ -1,5 +1,5 @@
-#ifndef ATTIVITÀ_H
-#define ATTIVITÀ_H
+#ifndef ATTIVITA_H
+#define ATTIVITA_H
 #include <string>
 
 
@@ -12,6 +12,8 @@ class Attivita {
     std::string get_orarioinizio() const;
     void set_orariofine(int new_orariofine);
     std::string get_orariofine() const;
+    bool operator<(const Attivita &other) const;
+    bool orarioValido() const;
 
 private:
     std::string descrizione;
