@@ -21,8 +21,7 @@ FetchContent_MakeAvailable(googletest)
 add_subdirectory(test)
 
 add_executable(PROGETTOLAB main.cpp
-        Attività.cpp
-        Attività.h
+        Attivita.cpp
         Registro.cpp
-        Registro.h)
+)
 target_link_libraries(PROGETTOLAB ${CURSES_LIBRARIES})

@@ -16,5 +16,4 @@ public:
 };
 
 
-
 #endif //REGISTRO_H

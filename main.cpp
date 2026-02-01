@@ -6,123 +6,153 @@
 #include <iostream>
 #include <cstdlib>
 
+
+std::string apriPopUp() {
+    int h = 5;
+    int l = 40;
+    int start_y = (LINES - h) / 2;
+    int start_x = (COLS - l) / 2;
+    WINDOW *win = newwin(h, l, start_y, start_x);
+    refresh();
+
+    box(win, 0, 0);
+    mvwprintw(win, 1, 2, "Inserisci la data (DD-MM-YYYY): ");
+    wrefresh(win);
+
+    char bufferData[11];
+    echo();
+    curs_set(1);
+    mvwgetnstr(win, 3, 2, bufferData, 10);
+    noecho();
+    curs_set(0);
+    delwin(win);
+    return std::string(bufferData);
+};
+
+Attivita apriFinestraNuovaAttivita() {
+    int h = 20;
+    int l = 40;
+    int start_y = (LINES - h) / 2;
+    int start_x = (COLS - l) / 2;
+    WINDOW *win = newwin(h, l, start_y, start_x);
+    refresh();
+
+    box(win, 0, 0);
+    wrefresh(win);
+    char descrizione[40], inizio[10], fine[10];
+
+    echo();
+    curs_set(1);
+    mvwprintw(win, 1, 2, "Inserisci la descrizione: ");
+    mvwgetnstr(win, 2, 2, descrizione, 39);
+
+    mvwprintw(win, 4, 2, "Inserisci l'orario di inizio (HH:MM): ");
+    mvwgetnstr(win, 5, 2, inizio, 9);
+
+    mvwprintw(win, 7, 2, "Inserisci l'orario di fine (HH:MM): ");
+    mvwgetnstr(win, 8, 2, fine, 9);
+    wrefresh(win);
+
+    noecho();
+    curs_set(0);
+    delwin(win);
+    return Attivita(descrizione, inizio, fine);
+}
+void visualizza_lista(Registro& registro, std::string data) {
+    int h = 20;
+    int l = 49;
+    int start_y = (LINES - h) / 2;
+    int start_x = (COLS - l) / 2;
+    WINDOW *win = newwin(h, l, start_y, start_x);
+    refresh();
+    box(win, 0, 0);
+
+    mvwprintw(win, 1, 2, "ATTIVITA' DEL GIORNO: %s", data.c_str());
+    mvwprintw(win, 2, 2, "-----------------------------------------");
+
+    std::vector<Attivita> lista = registro.get_attivita(data);
+
+    if (lista.empty()) {
+        mvwprintw(win, 3, 2, "Lista vuota. Per aggiungere attivita premi 'a'.");
+    } else {
+        for (int i = 0; i < lista.size(); i++) {
+            mvwprintw(win, 4 + i, 2, "[%s] %s  %s",
+                     lista[i].get_descrizione().c_str(),
+                     lista[i].get_orarioinizio().c_str(),
+                     lista[i].get_orariofine().c_str());
+        }
+    }
+    wrefresh(win);
+    wgetch(win);
+    delwin(win);
+}
+
+
 int main() {
-    system("mode con: cols=120 lines=50");
     initscr();
-    resize_term(50, 120);
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
     curs_set(0);
+    std::string dataCorrente = "Nessuna data";
+    int ch;
+    Registro r;
+
+    while (true) {
+        clear();
+        box(stdscr, 0, 0);
+        mvprintw(2, 2, "REGISTRO ATTIVITA'");
+        mvprintw(4, 2, "Data Attuale: %s", dataCorrente.c_str());
+        mvprintw(6, 2, "Premi 'd' per cambiare data");
+        mvprintw(7, 2, "Premi 'q' per uscire");
+        mvprintw(8, 2, "Premi 'a' per aggiungere una attivita' al registro");
+        mvprintw(9, 2, "Premi 'l' per visualizzare le attivita'.");
+
+        refresh();
+
+        ch = getch();
+
+        if (ch == 'q') {
+            break;
+        }
+        else if (ch == 'd') {
+            std::string nuovaData = apriPopUp();
+            if (!nuovaData.empty()) {
+                dataCorrente = nuovaData;
+            }
+        }
+        else if (ch == 'a') {
+            if (dataCorrente == "Nessuna data") {
+                mvprintw(11, 2, "ERROR: data non trovata. Premi 'd' per selezionarla.");
+                getch();
+            }
+            else {
+                Attivita nuovaAttivita = apriFinestraNuovaAttivita();
+                if (nuovaAttivita.orarioValido()) {
+                    r.add_attivita(nuovaAttivita, dataCorrente);
+                    mvprintw(11, 2, "Attivita' aggiunta con successo");
+                }
+                else {
+                    mvprintw(11,2, "ERROR: orario non valido (inizio>fine).");
+                }
+                getch();
+            }
+        }
+        else if (ch == 'l') {
+            if (dataCorrente == "Nessuna data") {
+                mvprintw(10, 2, "ERROR: data non selezionata. Per selezionare la data premi 'd'.");
+                getch();
+            }
+            else {
+                visualizza_lista(r, dataCorrente);
+            }
+        }
+
+    }
+        endwin();
+        return 0;
+    }
 
 
-
-    int giorno_selezionato = 0;
-    int ora_selezionata = 0;
-    int h=0;
-    int g=0;
-    std::string tabella[14][7];
-
-    int larg_colon = 10;
-    int spazio_orari = 8;
-    int y_schermo;
-    int x_schermo;
-    Attivita* new_attivita;
-    int h_win = 10;
-    int l_win = 40;
-    int y_win = 4;
-    int x_win = 80;
-
-
-    std::vector<std::string> settimana = {"Lun 3", "Mar 4", "Mer 5", "Gio 6", "Ven 7", "Sab 8", "Dom 9"};
-    std::vector<std::string> orario_iniziale = {"8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"};
-   while (true) {
-       clear();
-       for (int i=0; i<=6; i++) {
-           int posizione_giorni = 8 + (i * 10);
-           mvprintw(1, posizione_giorni, "%s", settimana[i].c_str());
-           mvvline(2, posizione_giorni-0.5, '|', 24);
-       }
-
-
-       int y = 2;
-       mvhline(3, 0, '-', 80);
-       for (int i=0; i<=11; i++) {
-           mvprintw(y, 0, "%s", orario_iniziale[i].c_str());
-           mvhline(y+1, 0, '-', 80 );
-           y = y + 2;
-       }
-       for (h=0; h<12; h++) {
-           for (g=0; g<7; g++) {
-               y_schermo = 2 + (h * 2);
-               x_schermo = 8 + (g * 10);
-
-               if (h == ora_selezionata && g == giorno_selezionato) {
-                   attron(A_REVERSE);
-               }
-               if (tabella[h][g] == "") {
-                   // Se la casella è vuota, disegno il puntino
-                   mvprintw(y_schermo, x_schermo, "  .  ");
-               } else {
-                   // Se c'è testo salvato, disegno un asterisco o un simbolo!
-                   mvprintw(y_schermo, x_schermo, "[ * ]");
-               }
-
-               attroff(A_REVERSE);
-           }
-       }
-       refresh();
-       int tasto = getch();
-       if (tasto == 27) break;
-       if (tasto == KEY_RIGHT) {
-           giorno_selezionato++;
-       }
-       if (tasto == KEY_LEFT) {
-           giorno_selezionato--;
-       }
-       if (tasto == KEY_DOWN) {
-           if (ora_selezionata<12) ora_selezionata++;
-       }
-       if (tasto == KEY_UP) {
-           if (ora_selezionata>0) ora_selezionata--;
-       }
-
-       std:: string current_activity = tabella[ora_selezionata][giorno_selezionato];
-       WINDOW *win = newwin(h_win, l_win, y_win, x_win);
-       box(win, 0, 0);
-       if (tasto == 10) {
-           if (current_activity == " . " || current_activity == "") {
-               echo();
-               curs_set(1);
-               char buffer[100];
-
-               mvwprintw(win, 1, 1 , "Aggiungi descrizione attivita':");
-               wrefresh(win);
-               mvwgetnstr(win, 2, 2, buffer, 99);
-
-               std::string testo_finale = std::string(buffer);
-
-               if (!testo_finale.empty()) {
-                   tabella[ora_selezionata][giorno_selezionato] = testo_finale;
-               }
-               noecho();
-               curs_set(0);
-           } else {
-
-                   mvwprintw(win, 1, 2, "Dettagli attivita':");
-                   mvwprintw(win, 2, 2, "%s", current_activity.c_str());
-                   wrefresh(win);
-                   wgetch(win);
-               }
-               delwin(win);
-               clear();
-           }
-       }
-
-
-
-    endwin();
-    return 0;
-}
 
 
