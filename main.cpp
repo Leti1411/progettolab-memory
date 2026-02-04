@@ -8,25 +8,51 @@
 
 
 std::string apriPopUp() {
-    int h = 5;
-    int l = 40;
+    int h = 10;
+    int l = 50;
     int start_y = (LINES - h) / 2;
     int start_x = (COLS - l) / 2;
     WINDOW *win = newwin(h, l, start_y, start_x);
+    box(win, 0, 0);
     refresh();
 
-    box(win, 0, 0);
     mvwprintw(win, 1, 2, "Inserisci la data (DD-MM-YYYY): ");
     wrefresh(win);
 
-    char bufferData[11];
+    char bufferData[30];
+    std::string dataInserita;
+    bool dataValida = false;
+
     echo();
     curs_set(1);
-    mvwgetnstr(win, 3, 2, bufferData, 10);
+
+    while (!dataValida) {
+        mvwprintw(win, 4, 2, "                              ");
+
+
+        mvwgetnstr(win, 4, 2, bufferData, 29);
+        dataInserita = std::string(bufferData);
+
+        if (dataInserita.length() != 10) {
+            mvwprintw(win, 6, 2, "ERRORE: Attenzione al formato DD-MM-YY.");
+            wrefresh(win);
+        }
+        else {
+            std::string anno = dataInserita.substr(6, 4);
+
+            if (anno == "2026") {
+                dataValida = true;
+            } else {
+                mvwprintw(win, 6, 2, "ERRORE: Inserisci una data del 2026.");
+                wrefresh(win);
+            }
+        }
+    }
+
     noecho();
     curs_set(0);
     delwin(win);
-    return std::string(bufferData);
+    return dataInserita;
 };
 
 Attivita apriFinestraNuovaAttivita() {
@@ -101,7 +127,7 @@ int main() {
     while (true) {
         clear();
         box(stdscr, 0, 0);
-        mvprintw(2, 2, "REGISTRO ATTIVITA'");
+        mvprintw(2, 2, "REGISTRO ATTIVITA' - 2026");
         mvprintw(4, 2, "Data Attuale: %s", dataCorrente.c_str());
         mvprintw(6, 2, "Premi 'd' per cambiare data");
         mvprintw(7, 2, "Premi 'q' per uscire");
