@@ -84,6 +84,61 @@ Attivita apriFinestraNuovaAttivita() {
     delwin(win);
     return Attivita(descrizione, inizio, fine);
 }
+
+void EliminaAttivita(Registro& r, std::string data) {
+    int h = 20;
+    int l = 60;
+    int start_y = (LINES - h) / 2;
+    int start_x = (COLS - l) / 2;
+
+    WINDOW *win = newwin(h, l, start_y, start_x);
+    refresh();
+    box(win, 0, 0);
+
+    mvwprintw(win, 1, 2, "Elimina attivita' in data (%s)", data.c_str());
+    mvwprintw(win, 2, 2, "----------------------------------------");
+
+    std::vector<Attivita> lista_att = r.get_attivita(data);
+    if (lista_att.empty()) {
+        mvwprintw(win, 4, 2, "Nessuna attivita' da cancellare.");
+        wrefresh(win);
+        wgetch(win);
+        delwin(win);
+        return;
+    }
+    for (int i = 0; i < lista_att.size(); i++) {
+        if (i >= h-6) break;
+        mvwprintw(win, 4+i, 2, "[%d] %s [%s-%s]",
+            i,
+            lista_att[i].get_descrizione().c_str(),
+            lista_att[i].get_orarioinizio().c_str(),
+            lista_att[i].get_orariofine().c_str());
+    }
+    mvwprintw(win, h-4, 2, "Inserisci l'indice dell'attivita' da cancellare:");
+    wrefresh(win);
+    char bufferIndice[10];
+    echo();
+    curs_set(1);
+    mvwgetnstr(win, h-4, 51, bufferIndice, 5);
+    noecho();
+    curs_set(0);
+
+    int indice_scelto = atoi(bufferIndice);
+    bool cancella = r.remove_attivita(indice_scelto, data);
+
+    if (cancella) {
+        mvwprintw(win, h - 2, 2, "Attivita' eliminata con successo.");
+    }
+    else {
+        mvwprintw(win, h - 2, 2, "ERROR: Indice non valido");
+    }
+    wrefresh(win);
+    wgetch(win);
+    delwin(win);
+}
+
+
+
 void visualizza_lista(Registro& registro, std::string data) {
     int h = 20;
     int l = 49;
@@ -113,6 +168,53 @@ void visualizza_lista(Registro& registro, std::string data) {
     delwin(win);
 }
 
+void show_entireRegistro(Registro& r) {
+    int h = 20;
+    int l = 72;
+    int start_y = (LINES - h) / 2;
+    int start_x = (COLS - l) / 2;
+
+    WINDOW *win = newwin(h, l, start_y, start_x);
+    refresh();
+    box(win, 0, 0);
+
+    mvwprintw(win, 1, 2, "REGISTRO COMPLETO - 2026");
+    mvwprintw(win, 2, 2, "---------------------------");
+
+    auto tuttoregistro = r.show_tuttoRegistro();
+    int riga = 3;
+
+    if (tuttoregistro.empty()) {
+        mvwprintw(win, riga, 2, "Nessuna attivita' presente. Premi 'd' per selezionare la data,");
+        mvwprintw(win, riga+1, 2, "e poi premi 'a' per aggiungere attivita'." );
+    }
+    else {
+        for (auto const& element : tuttoregistro) {
+            std::string data = element.first;
+            auto lista_attivita = element.second;
+
+            if (riga >= h-2 ) {break;}
+
+            mvwprintw(win, riga, 2, "DATA %s", data.c_str());
+            riga++;
+
+            for (auto& attivita : lista_attivita) {
+
+                if (riga >= h-2) {break;}
+
+                mvwprintw(win, riga, 4, "%s [%s - %s]",
+                    attivita.get_descrizione().c_str(),
+                    attivita.get_orarioinizio().c_str(),
+                    attivita.get_orariofine().c_str());
+                riga++;
+            }
+        }
+    }
+    wrefresh(win);
+    wgetch(win);
+    delwin(win);
+}
+
 
 int main() {
     initscr();
@@ -132,7 +234,9 @@ int main() {
         mvprintw(6, 2, "Premi 'd' per cambiare data");
         mvprintw(7, 2, "Premi 'q' per uscire");
         mvprintw(8, 2, "Premi 'a' per aggiungere una attivita' al registro");
-        mvprintw(9, 2, "Premi 'l' per visualizzare le attivita'.");
+        mvprintw(9,2, "Premi 'r' pre rimuovere una attivita' dal registro");
+        mvprintw(10, 2, "Premi 'l' per visualizzare le attivita' del giorno selezionato.");
+        mvprintw(11, 2, "Premi 't' per visualizzare tutto il registro.");
 
         refresh();
 
@@ -149,35 +253,47 @@ int main() {
         }
         else if (ch == 'a') {
             if (dataCorrente == "Nessuna data") {
-                mvprintw(11, 2, "ERROR: data non trovata. Premi 'd' per selezionarla.");
+                mvprintw(15, 2, "ERROR: data non trovata. Premi 'd' per selezionarla.");
                 getch();
             }
             else {
                 Attivita nuovaAttivita = apriFinestraNuovaAttivita();
                 if (nuovaAttivita.orarioValido()) {
                     r.add_attivita(nuovaAttivita, dataCorrente);
-                    mvprintw(11, 2, "Attivita' aggiunta con successo");
+                    mvprintw(15, 2, "Attivita' aggiunta con successo");
                 }
                 else {
-                    mvprintw(11,2, "ERROR: orario non valido (inizio>fine).");
+                    mvprintw(15,2, "ERROR: orario non valido (inizio>fine).");
                 }
                 getch();
             }
         }
         else if (ch == 'l') {
             if (dataCorrente == "Nessuna data") {
-                mvprintw(10, 2, "ERROR: data non selezionata. Per selezionare la data premi 'd'.");
+                mvprintw(15, 2, "ERROR: data non selezionata. Per selezionare la data premi 'd'.");
                 getch();
             }
             else {
                 visualizza_lista(r, dataCorrente);
             }
         }
+        else if (ch == 't') {
+           show_entireRegistro(r);
+        }
+        else if (ch == 'r') {
+            if (dataCorrente == "Nessuna data") {
+                mvprintw(15, 2, "Seleziona prima una data. Per farlo premi 'd'");
+                getch();
+            }
+            else {
+                EliminaAttivita(r, dataCorrente);
+            }
+        }
 
     }
         endwin();
         return 0;
-    }
+}
 
 
 
