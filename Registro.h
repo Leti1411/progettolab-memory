@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 
+
 #include "Attivita.h"
 
 class Registro {

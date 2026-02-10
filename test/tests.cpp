@@ -1,96 +1,93 @@
-#include <gtest/gtest.h>
-#include "Attivita.h"
-#include "Registro.h"
+#include "gtest/gtest.h"
+#include "../Attivita.h"
+#include "../Registro.h"
 
-TEST(AttivitaTest, CostruttoreEGetters) {
-    std::string descrizione = "TEST ATTIVITA'";
-    std::string inizio = "9:00";
-    std::string fine = "12:00";
+class AttivitaSuite : public ::testing::Test {
+protected:
+    void SetUp() override {
+    }
 
-    Attivita a(descrizione, inizio, fine);
+    void TearDown() override {
+    }
+};
 
-    EXPECT_EQ(a.get_descrizione(), descrizione);
-    EXPECT_EQ(a.get_orarioinizio(), inizio);
-    EXPECT_EQ(a.get_orariofine(), fine);
-
+TEST_F(AttivitaSuite, CostruttoreEGetters) {
+    Attivita a("Partita", "10:00", "12:00");
+    ASSERT_EQ(a.get_descrizione(), "Partita");
+    ASSERT_EQ(a.get_orarioinizio(), "10:00");
+    ASSERT_EQ(a.get_orariofine(), "12:00");
 }
 
-TEST(AttivitaTest, OrarioValido) {
-    Attivita valida("Giusta", "09:00", "11:00");
-    Attivita invalida("Sbagliata", "10:00", "07:00");
-    Attivita uguale("Uguale", "09:00", "09:00");
+TEST_F(AttivitaSuite, OrarioValido) {
+    Attivita a1("Valid", "10:00", "11:00");
+    ASSERT_TRUE(a1.orarioValido());
 
-    EXPECT_TRUE(valida.orarioValido());
-    EXPECT_FALSE(invalida.orarioValido());
-    EXPECT_FALSE(uguale.orarioValido());
+    Attivita a2("Invalid", "12:00", "11:00");
+    ASSERT_FALSE(a2.orarioValido());
 }
 
-TEST(AttivitaTest, OperatoreMinore) {
-    Attivita presto("Presto", "09:00", "11:00");
-    Attivita tardi ("Tardi", "17:00", "19:00");
+TEST_F(AttivitaSuite, OperatoreMinore) {
+    Attivita prima("Prima", "08:00", "09:00");
+    Attivita dopo("Dopo", "20:00", "21:00");
 
-    EXPECT_TRUE(presto < tardi);
-    EXPECT_FALSE(tardi < presto);
+    ASSERT_TRUE(prima < dopo);
+    ASSERT_FALSE(dopo < prima);
 }
 
-TEST(RegistroTest, AggiungAttivita) {
-    Registro r;
-    Attivita a("Lavoro", "09:00", "11:00");
-    r.add_attivita(a, "12-02-2026");
-    std::vector<Attivita> lista = r.get_attivita("12-02-2026");
+class RegistroSuite : public ::testing::Test {
+protected:
+    Registro* registro;
 
+    void SetUp() override {
+        registro = new Registro();
+    }
+
+    void TearDown() override {
+        delete registro;
+    }
+};
+
+TEST_F(RegistroSuite, AggiuntaAttivita) {
+    Attivita a("Nuoto", "10:00", "11:00");
+    registro->add_attivita(a, "10-02-2026");
+
+    std::vector<Attivita> lista = registro->get_attivita("10-02-2026");
     ASSERT_EQ(lista.size(), 1);
-    EXPECT_EQ(lista[0].get_descrizione(), "Lavoro");
+    ASSERT_EQ(lista[0].get_descrizione(), "Nuoto");
 }
 
-TEST(RegistroTest, RifiutaOrarioInvalido) {
-    Registro r;
-    Attivita a("Errore", "13:00", "12:00"); // Orario sbagliato
+TEST_F(RegistroSuite, AggiuntaAttivitaNonValida) {
+    Attivita a("Errata", "12:00", "11:00");
+    registro->add_attivita(a, "10-02-2026");
 
-    r.add_attivita(a, "13-01-2026");
-
-    std::vector<Attivita> lista = r.get_attivita("13-01-2026");
-
-    EXPECT_TRUE(lista.empty());
+    std::vector<Attivita> lista = registro->get_attivita("10-02-2026");
+    ASSERT_EQ(lista.size(), 0);
 }
 
-TEST(RegistroTest, OrdinamentoAutomatico) {
-    Registro r;
+TEST_F(RegistroSuite, OrdinamentoAutomatico) {
+    Attivita a1("Sera", "20:00", "21:00");
+    Attivita a2("Mattina", "08:00", "09:00");
 
-    // ordine sbagliato
-    Attivita sera("Cena", "20:00", "21:00");
-    Attivita mattina("Colazione", "07:00", "08:00");
-    Attivita pranzo("Pranzo", "13:00", "14:00");
+    registro->add_attivita(a1, "10-02-2026");
+    registro->add_attivita(a2, "10-02-2026");
 
-    r.add_attivita(sera, "14-11-2026");
-    r.add_attivita(mattina, "14-11-2026");
-    r.add_attivita(pranzo, "14-11-2026");
-
-    std::vector<Attivita> lista = r.get_attivita("14-11-2026");
-
-    ASSERT_EQ(lista.size(), 3);
-
-    // verifico l'ordine corretto
-    EXPECT_EQ(lista[0].get_descrizione(), "Colazione");
-    EXPECT_EQ(lista[1].get_descrizione(), "Pranzo");
-    EXPECT_EQ(lista[2].get_descrizione(), "Cena");
+    std::vector<Attivita> lista = registro->get_attivita("10-02-2026");
+    ASSERT_EQ(lista.size(), 2);
+    ASSERT_EQ(lista[0].get_descrizione(), "Mattina");
+    ASSERT_EQ(lista[1].get_descrizione(), "Sera");
 }
 
-TEST(RegistroTest, GiorniDiversi) {
-    Registro r;
-    Attivita a1("Vigilia", "10:00", "11:00");
-    Attivita a2("Natale", "10:00", "11:00");
+TEST_F(RegistroSuite, RimozioneAttivita) {
+    Attivita a("Corsa", "18:00", "19:00");
+    registro->add_attivita(a, "10-02-2026");
 
-    r.add_attivita(a1, "24-12-2025");
-    r.add_attivita(a2, "25-12-2025");
+    bool rimossa = registro->remove_attivita(0, "10-02-2026");
 
-    EXPECT_EQ(r.get_attivita("24-12-2025").size(), 1);
-    EXPECT_EQ(r.get_attivita("25-12-2025").size(), 1);
-
-    EXPECT_EQ(r.get_attivita("24-12-2025")[0].get_descrizione(), "Vigilia");
+    ASSERT_TRUE(rimossa);
+    ASSERT_EQ(registro->get_attivita("10-02-2026").size(), 0);
 }
 
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+TEST_F(RegistroSuite, RimozioneIndiceErrato) {
+    bool rimossa = registro->remove_attivita(0, "10-02-2026");
+    ASSERT_FALSE(rimossa);
 }

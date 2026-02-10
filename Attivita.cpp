@@ -9,13 +9,13 @@
    std::string Attivita::get_descrizione() const {
        return descrizione;
    }
-    void Attivita::set_orarioinizio(int new_orarioinizio) {
+    void Attivita::set_orarioinizio(std::string new_orarioinizio) {
         orarioinizio = new_orarioinizio;
     }
     std::string Attivita::get_orarioinizio() const {
         return orarioinizio;
     }
-    void Attivita::set_orariofine(int new_orariofine) {
+    void Attivita::set_orariofine(std::string new_orariofine) {
         orariofine = new_orariofine;
     }
     std::string Attivita::get_orariofine() const {
